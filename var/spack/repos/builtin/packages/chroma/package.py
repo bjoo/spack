@@ -16,19 +16,31 @@ class Chroma(CMakePackage):
             values=('scalar','parscalar'), multi=False)
 
     # Optional libs (included with chroma)
-    variant('cpp_dslash', default=True, description="Set whether we want CPPWilsonDslash or not")
+    variant('cpp_dslash', default=False, description="Set whether we want CPPWilsonDslash or not")
     variant('use_sse2', default=False, description="Set whether we want sse2 set or not")
     variant('use_sse3', default=False, description="Set whether we want sse3 set or not")
-    variant('openmp', default=True, description="Set whether we want openmp or not")
+    variant('openmp', default=False, description="Set whether we want openmp or not")
     variant('sanitizers', default=False, description="Build with Sanitizers enabled")
 
+    variant('qdpjit', default=False, description="Build with QDP-JIT");
+    variant('jit_clover', default=False, description="Build with JIT Clover Term");
+    variant('jit_clover', default=True, when="+qdpjit",  description="Build with JIT Clover Term");
+
+    variant('quda', default=False, description="Build with QUDA");
+
     variant('lapack', default=False, description="Builds a lapack variant of the qdp-lapack submodule")
-    
-    depends_on('qdpxx parallel_arch=parscalar', when="parallel_arch=parscalar")
-    depends_on('qdpxx parallel_arch=scalar', when="parallel_arch=scalar")
+  
+    depends_on("qdp-jit parallel_arch=parscalar", when="+qdpjit parallel_arch=parscalar")
+    depends_on("qdp-jit parallel_arch=scalar", when="+qdpjit parallel_arch=scalar")
+    depends_on("quda +qdpjit", when="+quda +qdpjit")
+
+    depends_on("qdpxx parallel_arch=parscalar", when="~qdpjit parallel_arch=parscalar")
+    depends_on("qdpxx parallel_arch=scalar", when="~qdpjit parallel_arch=scalar")
+    depends_on("quda ~qdpjit", when="+quda ~qdpjit")
+ 
     depends_on('lapack', when='+lapack')
     
-    depends_on('cmake@3.17.0:', type='build') # CMAKE_MINIMUM_VERSION
+    depends_on('cmake@3.23.0:', type='build') # CMAKE_MINIMUM_VERSION
     
 
     def cmake_args(self):
@@ -47,6 +59,12 @@ class Chroma(CMakePackage):
                        self.define_from_variant('CPPWilsonDslash_ENABLE_OPENMP', 'openmp'),
                        self.define_from_variant('CPPWilsonDslash_ENABLE_SANITIZERS', 'sanitizers') ]
             args = args + dslash
+
+        if "+qdpjit" in spec:
+            args.extend([ self.define_from_variant('Chroma_ENABLE_JIT_CLOVER', 'jit_clover') ])
+        
+        if "+quda" in spec:
+            args.extend([ self.define_from_variant('Chroma_ENABLE_QUDA', 'quda')])
 
 
         return args

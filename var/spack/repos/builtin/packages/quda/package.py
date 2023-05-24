@@ -6,7 +6,7 @@ class Quda(CMakePackage,CudaPackage):
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://lattice.github.io/quda"
-    git      = "https://github.com/lattice/quda"
+    git      = "https://github.com/bjoo/quda"
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
@@ -14,33 +14,35 @@ class Quda(CMakePackage,CudaPackage):
 
     # Can add other version but am looking just to be in sync with 
     # Moderner CMake for now for Chroma Linkage
-    version('feature/moderner-cmake', branch="feature/moderner-cmake")
+    version("develop", branch="develop")
 
-    # Override cuda variant to have it enabled by default 
-    variant('cuda', default=True, description="BUILD With CUDA")
+    depends_on("git")
 
-    variant('cuda_arch', default='70', description="Supported CUDA Archs",
-            values=('30', '32', '35', '37',
-                    '50', '52', '53',
-                    '60', '61', '62',
-                    '70', '72', '75',
-                    '80', '86' ), multi=True)
+    variant("cuda_gpu_arch", default="70", description="GPU Archs",
+            values=("30", "32", "35", "37",
+                    "50", "52", "53",
+                    "60", "61", "62",
+                    "70", "72", "75",
+                    "80", "86" ), multi=True)
+
+    variant("hip_gpu_arch", default="gfx90a", description="HIP GPU Arch",
+            values=("gfx906", "gfx90a", "gfx1030"), multi=True)
 
     # Variants (aka CMake options)
-    variant('mpi', default=False, description="Build with MPI")
-    variant('qmp', default=False, description="Build with QMP")
-    variant('openmp', default=False, description="Enable Host OpenMP Use")
+    variant("mpi_comms", default=False, description="Build with MPI")
+    variant("qmp_comms", default=False, description="Build with QMP")
+    variant("openmp", default=False, description="Enable Host OpenMP Use")
 
     # Fermion types
-    variant('clover',            default=True,  description="Enable Clover")
-    variant('clover_hasenbusch', default=False,  description="Enable Hasenbusch Clover")
-    variant('dwf',               default=True,  description="Enable DWF")
-    variant('ndeg_twm',          default=False, description="Enable Non-degenerate Twisted Mass")
-    variant('staggered',         default=True,  description="Enable Staggered")
-    variant('twm',               default=False, description="Enable Twisted Mass")
-    variant('twm_clover',        default=False, description="Enable Twisted Clover")
-    variant('wilson',            default=True,  description="Enable Wilson Fermions")
-    variant('dynamic_clover',    default=False, description="Enable Dynamic Clover computations")
+    variant("clover",            default=True,  description="Enable Clover")
+    variant("clover_hasenbusch", default=False,  description="Enable Hasenbusch Clover")
+    variant("dwf",               default=True,  description="Enable DWF")
+    variant("ndeg_twm",          default=False, description="Enable Non-degenerate Twisted Mass")
+    variant("staggered",         default=True,  description="Enable Staggered")
+    variant("twm",               default=False, description="Enable Twisted Mass")
+    variant("twm_clover",        default=False, description="Enable Twisted Clover")
+    variant("wilson",            default=True,  description="Enable Wilson Fermions")
+    variant("dynamic_clover",    default=True, description="Enable Dynamic Clover computations")
 
     # Gauge things
     variant('force_gauge',       default=True,  description="Enable Gauge Force for MILC")
@@ -49,25 +51,24 @@ class Quda(CMakePackage,CudaPackage):
     variant('gauge_tools',       default=False, description="Enable gauge Tools")
 
     # MG
-    variant('multigrid',         default=True,  description="Enable Multigrid")
+    variant("multigrid",         default=True,  description="Enable Multigrid")
 
     # Interfaces
-    variant('qdpjit',            default=False, description="Enable QDPJIT -- use quda_alloc from QDPJIT")
-    variant('interface_qdpjit',  default=False, description="Enable QDPJIT Interface")
-    variant('interface_milc',    default=True,  description="Enable MILC Interface")
-    variant('interface_cps',     default=False, description="Enable CPS Interface")
-    variant('interface_qdp',     default=True,  description="Enable QDP Interface")
-    variant('interface_tifr',    default=False, description="Enable TIFR Interface")
+    variant("qdpjit",            default=False, description="Enable QDPJIT -- use quda_alloc from QDPJIT")
+    variant("interface_milc",    default=True,  description="Enable MILC Interface")
+    variant("interface_cps",     default=False, description="Enable CPS Interface")
+    variant("interface_qdp",     default=True,  description="Enable QDP Interface")
+    variant("interface_tifr",    default=False, description="Enable TIFR Interface")
 
     # Build optios and standards
-    variant('sharedlib',         default=True,  description="Build Shared Libs")
-    variant('build_all_tests',   default=True,  description="Build All Tests")
-    variant('cxxstd',            default='14',  description="C++ standard to use",
+    variant("sharedlib",         default=True,  description="Build Shared Libs")
+    variant("build_all_tests",   default=True,  description="Build All Tests")
+    variant("cxxstd",            default='14',  description="C++ standard to use",
             values=('14','17'), multi=False)
-    variant('precision',         default='14',  description="QUDA_PRECISION for faster builds",
+    variant("precision",         default='14',  description="QUDA_PRECISION for faster builds",
             values=('1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'), multi=False)
     
-    variant('reconstruct',          default='7',   description="QUDA_RECONSTRUCT for faster builds",
+    variant("reconstruct",          default='7',   description="QUDA_RECONSTRUCT for faster builds",
             values=('1','2','3','4','5','6','7'), multi=False)
 
     variant('fast_compile_reduce', default=False, description="Enable fast compilation for reductions")
@@ -75,31 +76,36 @@ class Quda(CMakePackage,CudaPackage):
 
 
     #Specialied Build-Type values
-    variant('build_type', default='DEVEL', description="The QUDA Build Type -- these are custom",
-            values=('DEVEL', 'STRICT', 'RELEASE', 'DEBUG', 'HOSTDEBUG', 'SANITIZE'), multi=False)
+    variant("build_type", default="DEVEL", description="The QUDA Build Type -- these are custom",
+            values=("DEVEL", "STRICT", "RELEASE", "DEBUG", "HOSTDEBUG", "SANITIZE"), multi=False)
 
+    variant('quda_max_multiblas', default="9", description="Multi Blas N")
 
+    # MDW fused LS LIST
+    #variant("mdw_fused_ls_list", default="4,8,12,16,20", description="MDWF Fused Ls List",
+    #        values=("4","8","12","16","20"), multi=True)
+
+    #variant("mg_nvec_list", default="6,24,32", description="Multigrid NVec List",
+    #        values=("6","24","32","48","64","96"), multi=True)
+    
     #Dependencies
-    depends_on('cuda', when="+cuda")
-    depends_on('cmake@3.18.0:', type='build')    # Minimum Required CMake
+    depends_on("cuda", when="+cuda")
+    depends_on("qdp-jit", when="+qdpjit")
+    depends_on("mpi", when="+qdpjit")
+    depends_on("cmake@3.23.0:", type="build")    # Minimum Required CMake
 
     # This makes sure we have a supported cuda_arch: Currently up to Fermi
-    unsupported_cuda_archs = [ 'none', '10', '11', '12', '13', '20', '21'   ]
-    for value in unsupported_cuda_archs:
-        conflicts('cuda_arch={0}'.format(value), when='+cuda',
-                  msg='CUDA architecture {0} is not supported'.format(value))
     
     # MPI Dependency for MPI builds
-    depends_on('mpi', when="+mpi")
-    conflicts('+mpi', when='+qmp',
+    depends_on("mpi", when="+mpi_comms")
+    conflicts("+mpi_comms", when="+qmp_comms",
               msg='Cant have both QMP and MPI enabled')
 
     # QMP Dependency for QMP builds
-    depends_on('qmp', when="+qmp")
-    conflicts('+qmp', when='+mpi',
+    depends_on("qmp", when="+qmp_comms")
+    conflicts('+qmp_comms', when='+mpi_comms',
               msg='Cant have both QMP and MPI enabled')
-    
-    
+   
     def cmake_args(self):
         spec = self.spec
         args = [
@@ -111,34 +117,40 @@ class Quda(CMakePackage,CudaPackage):
             self.define_from_variant('QUDA_DIRAC_TWISTED_MASS', 'twm'),
             self.define_from_variant('QUDA_DIRAC_TWISTED_CLOVER', 'twm_clover'),
             self.define_from_variant('QUDA_DIRAC_WILSON', 'wilson'),
-            self.define_from_variant('QUDA_DYNAMIC_CLOVER', 'dynamic_clover'),
-            self.define_from_variant('QUDA_FORCE_GAUGE', 'force_gauge'),
-            self.define_from_variant('QUDA_FORCE_HISQ', 'force_hisq'),
-            self.define_from_variant('QUDA_GAUGE_ALG', 'gauge_alg'),
-            self.define_from_variant('QUDA_GAUGE_TOOLS', 'gauge_tools'),
+            self.define_from_variant('QUDA_CLOVER_DYNAMIC', 'dynamic_clover'),
             self.define_from_variant('QUDA_QDPJIT', 'qdpjit'),
-            self.define_from_variant('QUDA_INTERFACE_QDPJIT', 'interface_qdpjit'),
+            self.define_from_variant('QUDA_INTERFACE_QDPJIT', 'qdpjit'),
             self.define_from_variant('QUDA_INTERFACE_MILC',   'interface_milc'),
             self.define_from_variant('QUDA_INTERFACE_CPS',    'interface_cps'),
             self.define_from_variant('QUDA_INTERFACE_QDP',    'interface_qdp'),
-            self.define_from_variant('QUDA_INTERFACE_TFIR',   'interface_tifr'),
+            self.define_from_variant('QUDA_INTERFACE_TIFR',   'interface_tifr'),
             self.define_from_variant('QUDA_MULTIGRID', 'multigrid'),
+            self.define_from_variant('QUDA_MAX_MULTI_BLAS_N', 'quda_max_multiblas'),
             self.define_from_variant('QUDA_BUILD_SHAREDLIB', 'sharedlib'),
             self.define_from_variant('QUDA_BUILD_ALL_TESTS', 'build_all_tests'),
-            self.define_from_variant('QUDA_FAST_COMPILE_REDCUCE', 'fast_compile_reduce'),
+            self.define_from_variant('QUDA_INSTALL_ALL_TESTS', 'build_all_tests'),
+            self.define_from_variant('QUDA_FAST_COMPILE_REDUCE', 'fast_compile_reduce'),
             self.define_from_variant('QUDA_FAST_COMPILE_DSLASH', 'fast_compile_dslash'),
+            self.define('QUDA_EIGEN_VERSION', "3.3.9"),
             '-DCMAKE_CXX_STANDARD={0}'.format(spec.variants['cxxstd'].value),
             '-DQUDA_PRECISION={0}'.format(spec.variants['precision'].value),
-            '-DQUDA_RECONSTRUCT={0}'.format(spec.variants['reconstruct'].value)
+            '-DQUDA_RECONSTRUCT={0}'.format(spec.variants['reconstruct'].value),
+            self.define('QUDA_SPACK_BUILD', 'ON')
         ]
 
         if '+cuda' in spec:
             args.extend(['-DQUDA_TARGET_TYPE=CUDA' ])
-            cuda_arch_list = spec.variants['cuda_arch'].value
+            cuda_arch_list = spec.variants['cuda_gpu_arch'].value
             args.extend(['-DQUDA_GPU_ARCH=sm_{0}'.format(cuda_arch_list[0]) ])
 
-        args.extend( [self.define_from_variant('-DQUDA_MPI', 'mpi')] )
-        args.extend( [self.define_from_variant('-DQUDA_QMP', 'qmp')] )
+        if '+qdpjit' in spec:
+            args.extend([self.define_from_variant('QUDA_QMP', 'qdpjit')])
+
+        if '+qmp_comms' in spec:
+            args.extend([self.define_from_variant('QUDA_QMP', 'qmp_comms')])
+        
+        if '+mpi_comms' in spec:
+            args.extend([self.define_from_variant('QUDA_MPI', 'mpi_comms')])
 
         return args;
             

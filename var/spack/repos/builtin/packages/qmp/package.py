@@ -25,7 +25,8 @@ class Qmp(CMakePackage):
     def cmake_args(self):
         args = [ '-DCMAKE_C_STANDARD=99',
                  self.define_from_variant('QMP_MPI', 'mpi'),
-                 self.define_from_variant('QMP_ENABLE_SANITIZERS', 'sanitizers') ]
+                 self.define_from_variant('QMP_ENABLE_SANITIZERS', 'sanitizers'),
+                 self.define("BUILD_SHARED_LIBS", "ON") ]
         return args	
 
 
