@@ -1,7 +1,7 @@
 from spack import *
 
 
-class Quda(CMakePackage,CudaPackage):
+class Quda(CMakePackage,CudaPackage,ROCmPackage):
     """The QUDA Library for Lattie QCD on GPUs"""
 
     # FIXME: Add a proper url for your package's homepage here.
@@ -17,16 +17,6 @@ class Quda(CMakePackage,CudaPackage):
     version("develop", branch="develop")
 
     depends_on("git")
-
-    variant("cuda_gpu_arch", default="70", description="GPU Archs",
-            values=("30", "32", "35", "37",
-                    "50", "52", "53",
-                    "60", "61", "62",
-                    "70", "72", "75",
-                    "80", "86" ), multi=True)
-
-    variant("hip_gpu_arch", default="gfx90a", description="HIP GPU Arch",
-            values=("gfx906", "gfx90a", "gfx1030"), multi=True)
 
     # Variants (aka CMake options)
     variant("mpi_comms", default=False, description="Build with MPI")
@@ -94,6 +84,7 @@ class Quda(CMakePackage,CudaPackage):
     depends_on("mpi", when="+qdpjit")
     depends_on("cmake@3.23.0:", type="build")    # Minimum Required CMake
 
+    variant("cray", default=False, description="Set to +cray to use Cray Wrappers")
     # This makes sure we have a supported cuda_arch: Currently up to Fermi
     
     # MPI Dependency for MPI builds
@@ -140,9 +131,14 @@ class Quda(CMakePackage,CudaPackage):
 
         if '+cuda' in spec:
             args.extend(['-DQUDA_TARGET_TYPE=CUDA' ])
-            cuda_arch_list = spec.variants['cuda_gpu_arch'].value
+            cuda_arch_list = spec.variants['cuda_arch'].value
             args.extend(['-DQUDA_GPU_ARCH=sm_{0}'.format(cuda_arch_list[0]) ])
 
+        if '+rocm' in spec:
+            args.extend(['-DQUDA_TARGET_TYPE=HIP' ])
+            args.extend([ self.define_from_variant('QUDA_GPU_ARCH', "amdgpu_target") ])
+            args.append(self.define("HIP_CXX_COMPILER", self.compiler.cxx))
+ 
         if '+qdpjit' in spec:
             args.extend([self.define_from_variant('QUDA_QMP', 'qdpjit')])
 
@@ -153,8 +149,3 @@ class Quda(CMakePackage,CudaPackage):
             args.extend([self.define_from_variant('QUDA_MPI', 'mpi_comms')])
 
         return args;
-            
-                    
-        
-
-    
