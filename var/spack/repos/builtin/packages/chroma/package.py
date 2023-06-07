@@ -44,6 +44,7 @@ class Chroma(CMakePackage):
     
 
     def cmake_args(self):
+	
         spec=self.spec
         args=[ self.define_from_variant('Chroma_ENABLE_CPP_WILSON_DSLASH', 'cpp_dslash'),
                self.define_from_variant('Chroma_ENABLE_SSE2', 'use_sse2'),
@@ -65,7 +66,9 @@ class Chroma(CMakePackage):
         
         if "+quda" in spec:
             args.extend([ self.define_from_variant('Chroma_ENABLE_QUDA', 'quda')])
-
+   
+        if '+rocm' in spec['qdp-jit']:
+            args.append(self.define("HIP_CXX_COMPILER", self.compiler.cxx))
 
         return args
 
