@@ -23,7 +23,7 @@
 from spack.package import *
 
 
-class QdpJit(CMakePackage):
+class QdpJit(CMakePackage,CudaPackage,ROCmPackage):
     """QDP-JIT: The JIT version of the QDP++ Software layer"""
 
     # FIXME: Add a proper url for your package's homepage here.
@@ -39,7 +39,8 @@ class QdpJit(CMakePackage):
 
     # FIXME: Add dependencies if required.
     depends_on("libxml2")
-    depends_on("llvm-qdpjit@15.x")
+    depends_on("llvm-qdpjit@15.x", when="+cuda")
+    depends_on("llvm-amdgpu", when="+rocm")
 
     variant("parallel_arch", default="parscalar", description="QDPXX Parallel arch",
             values=("scalar", "parscalar"), multi=False)
@@ -52,20 +53,15 @@ class QdpJit(CMakePackage):
     variant("precision", default="double", description="QDP++ base precision", 
         values=("single", "double"), multi=False)
 
-    depends_on("cuda", when="backend=CUDA")
-
     def cmake_args(self):
-        spec= self.spec
         define = self.define
         define_from_variant = self.define_from_variant
-
+        print("SPECK IS", self.spec)
         try:
             build_type = self.spec.variants["build_type"].value
         except KeyError:
             build_type = "RelWithDebInfo"
 
-        
-        
         args = [
             define("CMAKE_C_EXTENSIONS", "OFF"),
             define("CMAKE_BUILD_TYPE", build_type),
@@ -74,6 +70,16 @@ class QdpJit(CMakePackage):
             define_from_variant("QDP_BUILD_EXAMPLES", "examples"),
             define_from_variant("QDP_PROP_OPT", "prop_opt"),
             define("BUILD_SHARED_LIBS", "ON"),
-            define("QDP_ENABLE_LLVM15", "ON")
+            define("QDP_ENABLE_LLVM15", "ON"),
+            define_from_variant("QDP_PARALLEL_ARCH","parallel_arch")
         ]
+
+        if "+rocm" in self.spec :
+            args.append( define("QDP_ENABLE_BACKEND", "ROCM") )
+            args.append( define_from_variant("GPU_TARGETS", "amdgpu_target"))
+            args.append(self.define("HIP_CXX_COMPILER", self.compiler.cxx))
+
+        if "+cuda" in self.spec :
+            args.append( define("QDP_ENABLE_BACKEND", "CUDA") )
+            args.append( define_from_fariant("GPU_TARGETS", "cuda_arch") )
         return args
